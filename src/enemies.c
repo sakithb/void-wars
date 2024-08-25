@@ -5,14 +5,17 @@
 #include "raymath.h"
 
 void enemy_init(Enemy *enemy) {
+	static int i = 0;
+	static int s = 0;
+
 	int blocks = MAX_ENEMIES/4;
 	int x_spacing = RWIDTH / blocks;
 	int y_spacing = RHEIGHT / blocks;
 
-	GameObject *gameobject = (GameObject*)enemy;
+	if (i >= blocks) i = 0;
+	if (s >= 4) s = 0;
 
-	int s = GetRandomValue(0, 4);
-	int i = GetRandomValue(0, blocks);
+	GameObject *gameobject = (GameObject*)enemy;
 
 	if (s == 0) {
 		gameobject->position.x = x_spacing * i;
@@ -30,6 +33,9 @@ void enemy_init(Enemy *enemy) {
 
 	enemy->target = gameobject->position;
 	enemy->health = ENEMY_HEALTH;
+
+	i++;
+	s++;
 }
 
 void enemy_update(Enemy *enemy, GameObject *player) {
