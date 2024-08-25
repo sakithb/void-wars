@@ -4,21 +4,30 @@
 
 #if defined(PLATFORM_WEB)
 #include <emscripten/emscripten.h>
+
+EM_JS(int, GetWindowInnerWidthC, (), { return window.innerWidth; });
+EM_JS(int, GetWindowInnerHeightC, (), { return window.innerHeight; });
 #endif
 
-RenderTexture fbo;
+RenderTexture fb;
 Texture bg;
 float bg_scale;
-State state = {0};
+State state;
+
+int win_width = 1920;
+int win_height = 1080;
 
 void game_loop();
 
 int main() {
-	InitWindow(1920, 1080, "Void Wars");
-	ToggleFullscreen();
-	
-	fbo = LoadRenderTexture(RWIDTH, RHEIGHT);
+#if defined(PLATFORM_WEB)
+	win_width = GetWindowInnerWidthC();
+	win_height = GetWindowInnerHeightC();
+#endif
 
+	InitWindow(win_width, win_height, "Void Wars");
+	
+	fb = LoadRenderTexture(RWIDTH, RHEIGHT);
 	bg = LoadTexture("assets/bg.png");
 	bg_scale = MIN((float)RWIDTH/bg.width, (float)RHEIGHT/bg.height);
 
@@ -39,13 +48,13 @@ int main() {
 	player_free(&state.player);
 
 	UnloadTexture(bg);
-	UnloadRenderTexture(fbo);
+	UnloadRenderTexture(fb);
 
 	CloseWindow();
 }
 
 void game_loop() {
-	float fbo_scale = MIN((float)GetScreenWidth()/RWIDTH, (float)GetScreenHeight()/RHEIGHT);
+	float fbo_scale = MIN((float)win_width/RWIDTH, (float)win_height/RHEIGHT);
 
 	switch (state.screen) {
 	case TITLE:
@@ -59,7 +68,7 @@ void game_loop() {
 		break;
 	}
 	
-	BeginTextureMode(fbo);
+	BeginTextureMode(fb);
 
 	ClearBackground(BLACK);
 
@@ -86,9 +95,9 @@ void game_loop() {
 	BeginDrawing();
 
 	DrawTexturePro(
-		fbo.texture,
-		(Rectangle){ 0.0f, 0.0f, (float)fbo.texture.width, (float)-fbo.texture.height },
-		(Rectangle){ (GetScreenWidth() - ((float)RWIDTH*fbo_scale))*0.5f, (GetScreenHeight() - ((float)RHEIGHT*fbo_scale))*0.5f, (float)RWIDTH*fbo_scale, (float)RHEIGHT*fbo_scale },
+		fb.texture,
+		(Rectangle){ 0.0f, 0.0f, (float)fb.texture.width, (float)-fb.texture.height },
+		(Rectangle){ (win_width - ((float)RWIDTH*fbo_scale))*0.5f, (win_height - ((float)RHEIGHT*fbo_scale))*0.5f, (float)RWIDTH*fbo_scale, (float)RHEIGHT*fbo_scale },
 		(Vector2){ 0, 0 },
 		0.0f,
 		WHITE);
