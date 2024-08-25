@@ -5,29 +5,27 @@
 #if defined(PLATFORM_WEB)
 #include <emscripten/emscripten.h>
 
-EM_JS(int, GetWindowInnerWidthC, (), { return window.innerWidth; });
-EM_JS(int, GetWindowInnerHeightC, (), { return window.innerHeight; });
+EM_JS(int, GetWidth, (), { return window.innerWidth; });
+EM_JS(int, GetHeight, (), { return window.innerHeight; });
 #endif
 
-RenderTexture fb;
+RenderTexture fbo;
 Texture bg;
 float bg_scale;
 State state;
-
-int win_width = 1920;
-int win_height = 1080;
 
 void game_loop();
 
 int main() {
 #if defined(PLATFORM_WEB)
-	win_width = GetWindowInnerWidthC();
-	win_height = GetWindowInnerHeightC();
+	InitWindow(GetWidth(), GetHeight(), "Void Wars");
+#else
+	InitWindow(1280, 720, "Void Wars");
 #endif
 
-	InitWindow(win_width, win_height, "Void Wars");
+	SetWindowState(FLAG_WINDOW_RESIZABLE);
 	
-	fb = LoadRenderTexture(RWIDTH, RHEIGHT);
+	fbo = LoadRenderTexture(RWIDTH, RHEIGHT);
 	bg = LoadTexture("assets/bg.png");
 	bg_scale = MIN((float)RWIDTH/bg.width, (float)RHEIGHT/bg.height);
 
@@ -41,20 +39,33 @@ int main() {
 	}
 #endif
 
-
 	bulletstack_free(&state.bullet_stack);
 	explosionmanager_free(&state.explosion_manager);
 	enemymanager_free(&state.enemy_manager);
 	player_free(&state.player);
 
 	UnloadTexture(bg);
-	UnloadRenderTexture(fb);
+	UnloadRenderTexture(fbo);
 
 	CloseWindow();
 }
 
 void game_loop() {
-	float fbo_scale = MIN((float)win_width/RWIDTH, (float)win_height/RHEIGHT);
+	float screen_width = GetScreenWidth();
+	float screen_height = GetScreenHeight();
+
+	float fbo_scale = MIN((float)screen_width/RWIDTH, (float)screen_height/RHEIGHT);
+	float fbo_x = (screen_width - ((float)RWIDTH*fbo_scale))*0.5f;
+	float fbo_y = (screen_height - ((float)RHEIGHT*fbo_scale))*0.5f;
+
+	Vector2 mpos = GetMousePosition();
+	mpos.x -= fbo_x;
+	mpos.y -= fbo_y;
+	mpos.x /= screen_width - (fbo_x * 2);
+	mpos.y /= screen_height - (fbo_y * 2);
+	mpos.x *= RWIDTH;
+	mpos.y *= RHEIGHT;
+	state.mouse_pos = GetScreenToWorld2D(mpos, state.camera);
 
 	switch (state.screen) {
 	case TITLE:
@@ -67,8 +78,8 @@ void game_loop() {
 		gamescreen_update_ending();
 		break;
 	}
-	
-	BeginTextureMode(fb);
+
+	BeginTextureMode(fbo);
 
 	ClearBackground(BLACK);
 
@@ -95,9 +106,9 @@ void game_loop() {
 	BeginDrawing();
 
 	DrawTexturePro(
-		fb.texture,
-		(Rectangle){ 0.0f, 0.0f, (float)fb.texture.width, (float)-fb.texture.height },
-		(Rectangle){ (win_width - ((float)RWIDTH*fbo_scale))*0.5f, (win_height - ((float)RHEIGHT*fbo_scale))*0.5f, (float)RWIDTH*fbo_scale, (float)RHEIGHT*fbo_scale },
+		fbo.texture,
+		(Rectangle){ 0.0f, 0.0f, (float)fbo.texture.width, (float)-fbo.texture.height },
+		(Rectangle){fbo_x, fbo_y, (float)RWIDTH*fbo_scale, (float)RHEIGHT*fbo_scale },
 		(Vector2){ 0, 0 },
 		0.0f,
 		WHITE);

@@ -20,6 +20,7 @@ typedef struct {
 	EnemyManager enemy_manager;
 	ExplosionManager explosion_manager;
 	Camera2D camera;
+	Vector2 mouse_pos;
 } State;
 
 void state_init();

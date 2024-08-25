@@ -2,6 +2,7 @@
 #include "../include/screens.h"
 #include "../include/contants.h"
 #include "../include/utils.h"
+#include <raylib.h>
 
 void player_init(Player *player) {
 	gameobject_init(&player->gameobject, "assets/player.png", 32, 5);
@@ -10,8 +11,8 @@ void player_init(Player *player) {
 	player->health = PLAYER_HEALTH;
 }
 
-void player_update(Player *player, Vector2 mouse) {
-	gameobject_lookat(&player->gameobject, mouse);
+void player_update(Player *player) {
+	gameobject_lookat(&player->gameobject, state.mouse_pos);
 	gameobject_update(&player->gameobject);
 
 	player->gameobject.position.x = MIN(MAX(0, player->gameobject.position.x), RWIDTH);

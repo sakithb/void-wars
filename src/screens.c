@@ -1,5 +1,6 @@
 #include "../include/screens.h"
 #include "../include/contants.h"
+#include <raylib.h>
 
 void state_init() {
 	player_init(&state.player);
@@ -23,8 +24,6 @@ void gamescreen_update_title() {
 }
 
 void gamescreen_update_gameplay() {
-	Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), state.camera);
-
 	// Updates
 
 	if (IsKeyDown(KEY_W)) {
@@ -42,12 +41,12 @@ void gamescreen_update_gameplay() {
 	}
 
 	if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-		bulletstack_shoot(&state.bullet_stack, mouse, state.player.gameobject.position);
+		bulletstack_shoot(&state.bullet_stack, state.mouse_pos, state.player.gameobject.position);
 	}
 
 	// Fixed updates
 
-	player_update(&state.player, mouse);
+	player_update(&state.player);
 	enemymanager_update(&state.enemy_manager);
 	explosionmanager_update(&state.explosion_manager);
 	bulletstack_update(&state.bullet_stack, &state.enemy_manager);
